@@ -40,6 +40,15 @@ sourceSets {
     }
 }
 
+// Appveyor CI
+if (System.env['APPVEYOR']) {
+    if (System.env['APPVEYOR_REPO_TAG_NAME']) {
+        version = System.env['APPVEYOR_REPO_TAG_NAME']
+    } else {
+        version = System.env['APPVEYOR_BUILD_VERSION']
+    }
+}
+
 def RES_DIR = "resources"
 
 task downloadEmmyDebugger(type: Download) {

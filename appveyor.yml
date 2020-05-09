@@ -1,0 +1,8 @@
+version: 1.0.0.{build}
+pull_requests:
+  do_not_increment_build_number: true
+environment:
+build_script:
+  - cmd: gradlew buildPlugin
+artifacts:
+  - path: build/distributions/*.zip
