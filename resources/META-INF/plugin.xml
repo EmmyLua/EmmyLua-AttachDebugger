@@ -1,0 +1,21 @@
+<idea-plugin>
+    <id>com.tang.emmylua.attach-debugger</id>
+    <name>EmmyLua Attach Debugger</name>
+    <version>1.0</version>
+    <vendor email="love.tangzx@qq.com">tangzx</vendor>
+
+    <description><![CDATA[
+    EmmyLua Attach Debugger Plugin for EmmyLua
+    ]]></description>
+
+    <idea-version since-build="173.0"/>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.tang</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <xdebugger.attachDebuggerProvider
+                implementation="com.tang.intellij.lua.debugger.emmyAttach.EmmyAttachDebuggerProvider"/>
+    </extensions>
+
+</idea-plugin>
