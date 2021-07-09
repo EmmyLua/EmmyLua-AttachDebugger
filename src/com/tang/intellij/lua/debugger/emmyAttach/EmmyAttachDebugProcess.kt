@@ -22,6 +22,8 @@ import com.intellij.execution.process.*
 import com.intellij.execution.ui.ConsoleViewContentType
 import com.intellij.openapi.util.Key
 import com.intellij.xdebugger.XDebugSession
+import com.intellij.xdebugger.XSourcePosition
+import com.intellij.xdebugger.breakpoints.XLineBreakpoint
 import com.tang.intellij.lua.debugger.LogConsoleType
 import com.tang.intellij.lua.debugger.emmy.*
 import com.tang.intellij.lua.debugger.utils.FileUtils
@@ -100,6 +102,15 @@ class EmmyAttachDebugProcess(
         handler.startNotify()
         handler.waitFor()
         return handler.exitCode == 0
+    }
+
+    // work around 等以后删掉
+    override fun registerBreakpoint(sourcePosition: XSourcePosition, breakpoint: XLineBreakpoint<*>) {
+        val file = sourcePosition.file
+        val shortPath = file.canonicalPath
+        if (shortPath != null) {
+            send(AddBreakPointReqEx(listOf(BreakPointEx(shortPath, breakpoint.line + 1, breakpoint.conditionExpression?.expression))))
+        }
     }
 
     override fun onReceiveMessage(cmd: MessageCMD, json: String) {
