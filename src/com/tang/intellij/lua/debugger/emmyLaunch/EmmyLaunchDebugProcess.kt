@@ -158,7 +158,6 @@ class EmmyLaunchDebugProcess(session: XDebugSession, val configuration: EmmyLaun
                 "\"${path}\"",
                 "-work",
                 "\"${configuration.workingDirectory}\"",
-                "-block-on-exit",
                 "-exe",
                 "\"${configuration.program}\"",
                 "-debug-port",
@@ -223,6 +222,11 @@ class EmmyLaunchDebugProcess(session: XDebugSession, val configuration: EmmyLaun
         if (shortPath != null) {
             send(AddBreakPointReqEx(listOf(BreakPointEx(shortPath, breakpoint.line + 1, breakpoint.conditionExpression?.expression))))
         }
+    }
+
+    override fun onDisconnect() {
+        super.onDisconnect()
+        client?.close()
     }
 
     override fun onReceiveMessage(cmd: MessageCMD, json: String) {
