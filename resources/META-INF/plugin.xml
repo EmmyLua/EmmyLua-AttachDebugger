@@ -16,6 +16,11 @@
     <extensions defaultExtensionNs="com.intellij">
         <xdebugger.attachDebuggerProvider
                 implementation="com.tang.intellij.lua.debugger.emmyAttach.EmmyAttachDebuggerProvider"/>
+        <programRunner implementation="com.tang.intellij.lua.debugger.emmyLaunch.EmmyLaunchRunner"/>
+        <configurationType implementation="com.tang.intellij.lua.debugger.emmyLaunch.EmmyLaunchConfigurationType"/>
+
+        <programRunner implementation="com.tang.intellij.lua.debugger.emmyAttach.EmmyAttachRunner"/>
+        <configurationType implementation="com.tang.intellij.lua.debugger.emmyAttach.EmmyAttachConfigurationType"/>
     </extensions>
 
 </idea-plugin>

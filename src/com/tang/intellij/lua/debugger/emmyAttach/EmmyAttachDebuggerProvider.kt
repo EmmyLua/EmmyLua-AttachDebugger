@@ -48,7 +48,7 @@ class EmmyAttachDebuggerProvider : XLocalAttachDebuggerProvider {
                     val notification = Notification(
                             "Emmylua",
                             "Error",
-                            "Debugging tool 'emmy.arch.exe' has been removed, please reinstall the 'emmylua' plugin",
+                            "Debugging tool 'emmy_tool.exe' has been removed, please reinstall the 'emmylua' plugin",
                             NotificationType.WARNING)
                     notification.isImportant = true
                     Notifications.Bus.notify(notification)
