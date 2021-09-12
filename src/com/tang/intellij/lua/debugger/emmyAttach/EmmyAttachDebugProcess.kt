@@ -104,14 +104,6 @@ class EmmyAttachDebugProcess(
         return handler.exitCode == 0
     }
 
-    // work around 等以后删掉
-    override fun registerBreakpoint(sourcePosition: XSourcePosition, breakpoint: XLineBreakpoint<*>) {
-        val file = sourcePosition.file
-        val shortPath = file.canonicalPath
-        if (shortPath != null) {
-            send(AddBreakPointReqEx(listOf(BreakPointEx(shortPath, breakpoint.line + 1, breakpoint.conditionExpression?.expression))))
-        }
-    }
 
     override fun onReceiveMessage(cmd: MessageCMD, json: String) {
         if (cmd == MessageCMD.AttachedNotify) {
