@@ -1,42 +1,78 @@
-/*
- * Copyright (c) 2017. tangzx(love.tangzx@qq.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.tang.intellij.lua.debugger.emmyAttach
 
 import com.google.gson.Gson
 import com.intellij.execution.configurations.GeneralCommandLine
-import com.intellij.execution.process.*
+import com.intellij.execution.process.OSProcessHandler
+import com.intellij.execution.process.ProcessEvent
+import com.intellij.execution.process.ProcessListener
+import com.intellij.execution.process.ProcessOutputTypes
 import com.intellij.execution.ui.ConsoleViewContentType
+import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.util.Key
 import com.intellij.xdebugger.XDebugSession
 import com.tang.intellij.lua.debugger.LogConsoleType
 import com.tang.intellij.lua.debugger.emmy.*
 import com.tang.intellij.lua.debugger.utils.FileUtils
+import com.tang.intellij.lua.debugger.utils.ProcessDetailInfo
+import com.tang.intellij.lua.debugger.utils.listProcessesByEncoding
 
-class EmmyAttachDebugProcess(
+
+class EmmyConfigAttachDebugProcess(
     session: XDebugSession,
-    private val processInfo: ProcessInfo
+    val configuration: EmmyAttachDebugConfiguration
 ) : EmmyDebugProcessBase(session) {
+
+    private var pid: Int = 0
+
+    override fun sessionInitialized() {
+        val attachMode = configuration.attachMode
+
+
+        if (attachMode == EmmyAttachMode.Pid) {
+            pid = configuration.pid.toInt()
+            return super.sessionInitialized()
+        }
+
+        val processName = configuration.processName
+        val processes = listProcessesByEncoding(configuration.encoding)
+        val attachableList = mutableListOf<ProcessDetailInfo>()
+        for (info in processes) {
+            if (info.title.indexOf(processName) != -1 || info.path.indexOf(processName) != -1) {
+                attachableList.add(info)
+            }
+        }
+
+        if (attachableList.size == 1) {
+            pid = attachableList.first().pid
+            return super.sessionInitialized()
+        }
+
+        val jbInstance = JBPopupFactory.getInstance()
+        val displayMap = mutableMapOf<String, ProcessDetailInfo>()
+
+        for (processDetailInfo in attachableList) {
+            displayMap["${processDetailInfo.pid}:${processDetailInfo.title}"] = processDetailInfo
+        }
+
+        jbInstance.createPopupChooserBuilder(displayMap.keys.toList())
+            .setTitle("choose best match process")
+            .setMovable(true)
+            .setItemChosenCallback {
+                val processDetailInfo = displayMap[it]
+                if (processDetailInfo != null) {
+                    pid = processDetailInfo.pid
+                }
+                super.sessionInitialized()
+            }.createPopup().showInFocusCenter()
+    }
+
     override fun setupTransporter() {
         val suc = attach()
         if (!suc) {
             session.stop()
             return
         }
-        var port = processInfo.pid
+        var port = pid
         // 1024 - 65535
         while (port > 0xffff) port -= 0xffff
         while (port < 0x400) port += 0x400
@@ -59,13 +95,13 @@ class EmmyAttachDebugProcess(
     }
 
     private fun attach(): Boolean {
-        val arch = detectArchByPid(processInfo.pid)
+        val arch = detectArchByPid(pid)
         val path = FileUtils.getPluginVirtualFile("debugger/emmy/windows/${arch}")
         val commandLine = GeneralCommandLine("${path}/emmy_tool.exe")
         commandLine.addParameters(
             "attach",
             "-p",
-            "${processInfo.pid}",
+            "${pid}",
             "-dir",
             path,
             "-dll",

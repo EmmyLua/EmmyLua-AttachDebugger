@@ -1,10 +1,7 @@
 package com.tang.intellij.lua.debugger.emmyLaunch
 
 import com.intellij.execution.Executor
-import com.intellij.execution.configurations.ConfigurationFactory
-import com.intellij.execution.configurations.ConfigurationType
-import com.intellij.execution.configurations.RunConfiguration
-import com.intellij.execution.configurations.RunProfileState
+import com.intellij.execution.configurations.*
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction
 import com.intellij.openapi.module.Module
@@ -18,6 +15,7 @@ import com.tang.intellij.lua.debugger.LuaRunConfiguration
 import com.tang.intellij.lua.lang.LuaIcons
 import org.jdom.Element
 import javax.swing.Icon
+
 
 class EmmyLaunchConfigurationType : ConfigurationType {
     override fun getIcon(): Icon {
@@ -92,4 +90,6 @@ class EmmyLaunchDebugConfiguration(project: Project, factory: EmmyLaunchDebugger
             useWindowsTerminal = value == "true"
         }
     }
+
+
 }

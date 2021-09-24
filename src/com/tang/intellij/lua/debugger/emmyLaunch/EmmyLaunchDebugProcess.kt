@@ -2,8 +2,10 @@ package com.tang.intellij.lua.debugger.emmyLaunch
 
 import com.google.gson.Gson
 import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.execution.filters.TextConsoleBuilderFactory
 import com.intellij.execution.process.*
 import com.intellij.execution.ui.ConsoleViewContentType
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XSourcePosition
@@ -11,20 +13,20 @@ import com.intellij.xdebugger.breakpoints.XLineBreakpoint
 import com.tang.intellij.lua.debugger.LogConsoleType
 import com.tang.intellij.lua.debugger.emmy.*
 import com.tang.intellij.lua.debugger.utils.FileUtils
-import kotlinx.coroutines.Delay
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.Socket
 import java.util.concurrent.ThreadLocalRandom
-import kotlin.random.Random
 
-class EmmyLaunchDebugProcess(session: XDebugSession, val configuration: EmmyLaunchDebugConfiguration) :
-        EmmyDebugProcessBase(session) {
+
+class EmmyLaunchDebugProcess(
+    session: XDebugSession,
+    val configuration: EmmyLaunchDebugConfiguration,
+    val project: Project
+) :
+    EmmyDebugProcessBase(session) {
 
     var client: Socket? = null
 
@@ -74,24 +76,24 @@ class EmmyLaunchDebugProcess(session: XDebugSession, val configuration: EmmyLaun
         commandLine.exePath = "wt"
         commandLine.setWorkDirectory(path)
         commandLine.addParameters(
-                "--title",
-                 if (mc != null) mc.groups[0]?.value else configuration.program,
-                "emmy_tool.exe",
-                "run_and_attach",
-                "-dll",
-                "emmy_hook.dll",
-                "-dir",
-                "\"${path}\"",
-                "-work",
-                "\"${configuration.workingDirectory}\"",
-                "-block-on-exit",
-                "-exe",
-                "\"${configuration.program}\"",
-                "-debug-port",
-                port.toString(),
-                "-listen-mode",
-                "-args",
-                "\"${configuration.parameter}\""
+            "--title",
+            if (mc != null) mc.groups[0]?.value else configuration.program,
+            "emmy_tool.exe",
+            "run_and_attach",
+            "-dll",
+            "emmy_hook.dll",
+            "-dir",
+            "\"${path}\"",
+            "-work",
+            "\"${configuration.workingDirectory}\"",
+            "-block-on-exit",
+            "-exe",
+            "\"${configuration.program}\"",
+            "-debug-port",
+            port.toString(),
+            "-listen-mode",
+            "-args",
+            "\"${configuration.parameter}\""
         )
 
         val handler = OSProcessHandler(commandLine)
@@ -108,14 +110,14 @@ class EmmyLaunchDebugProcess(session: XDebugSession, val configuration: EmmyLaun
             override fun onTextAvailable(processEvent: ProcessEvent, key: Key<*>) {
                 when (key) {
                     ProcessOutputTypes.STDERR -> print(
-                            processEvent.text,
-                            LogConsoleType.NORMAL,
-                            ConsoleViewContentType.ERROR_OUTPUT
+                        processEvent.text,
+                        LogConsoleType.NORMAL,
+                        ConsoleViewContentType.ERROR_OUTPUT
                     )
                     ProcessOutputTypes.STDOUT -> print(
-                            processEvent.text,
-                            LogConsoleType.NORMAL,
-                            ConsoleViewContentType.SYSTEM_OUTPUT
+                        processEvent.text,
+                        LogConsoleType.NORMAL,
+                        ConsoleViewContentType.SYSTEM_OUTPUT
                     )
                 }
             }
@@ -144,31 +146,30 @@ class EmmyLaunchDebugProcess(session: XDebugSession, val configuration: EmmyLaun
         val port = getPort(ThreadLocalRandom.current().nextInt(10240) + 10240);
         val arch = detectArch()
         val path = FileUtils.getPluginVirtualFile("debugger/emmy/windows/${arch}")
-//        val re = Regex("[^/\\\\]+\$")
-//        val mc = re.find(configuration.program)
 
         val commandLine = GeneralCommandLine()
         commandLine.exePath = "${path}/emmy_tool.exe"
         commandLine.setWorkDirectory(path)
         commandLine.addParameters(
-                "run_and_attach",
-                "-dll",
-                "emmy_hook.dll",
-                "-dir",
-                "\"${path}\"",
-                "-work",
-                "\"${configuration.workingDirectory}\"",
-                "-exe",
-                "\"${configuration.program}\"",
-                "-debug-port",
-                port.toString(),
-                "-listen-mode",
-                "-args",
-                "\"${configuration.parameter}\""
+            "run_and_attach",
+            "-dll",
+            "emmy_hook.dll",
+            "-dir",
+            "\"${path}\"",
+            "-work",
+            "\"${configuration.workingDirectory}\"",
+            "-exe",
+            "\"${configuration.program}\"",
+            "-unitbuf",
+            "-debug-port",
+            port.toString(),
+            "-listen-mode",
+            "-args",
+            "\"${configuration.parameter}\""
         )
 
 
-        val handler = OSProcessHandler(commandLine)
+        val handler = ColoredProcessHandler(commandLine)
         handler.addProcessListener(object : ProcessListener {
             override fun startNotified(processEvent: ProcessEvent) {
             }
@@ -182,18 +183,19 @@ class EmmyLaunchDebugProcess(session: XDebugSession, val configuration: EmmyLaun
             override fun onTextAvailable(processEvent: ProcessEvent, key: Key<*>) {
                 when (key) {
                     ProcessOutputTypes.STDERR -> print(
-                            processEvent.text,
-                            LogConsoleType.NORMAL,
-                            ConsoleViewContentType.ERROR_OUTPUT
+                        processEvent.text,
+                        LogConsoleType.NORMAL,
+                        ConsoleViewContentType.ERROR_OUTPUT
                     )
                     ProcessOutputTypes.STDOUT -> print(
-                            processEvent.text,
-                            LogConsoleType.NORMAL,
-                            ConsoleViewContentType.SYSTEM_OUTPUT
+                        processEvent.text,
+                        LogConsoleType.NORMAL,
+                        ConsoleViewContentType.SYSTEM_OUTPUT
                     )
                 }
             }
         })
+
         handler.startNotify()
 
         client = Socket("localhost", port)
@@ -215,15 +217,6 @@ class EmmyLaunchDebugProcess(session: XDebugSession, val configuration: EmmyLaun
 
     }
 
-    // work around 等以后删掉
-    override fun registerBreakpoint(sourcePosition: XSourcePosition, breakpoint: XLineBreakpoint<*>) {
-        val file = sourcePosition.file
-        val shortPath = file.canonicalPath
-        if (shortPath != null) {
-            send(AddBreakPointReqEx(listOf(BreakPointEx(shortPath, breakpoint.line + 1, breakpoint.conditionExpression?.expression))))
-        }
-    }
-
     override fun onDisconnect() {
         super.onDisconnect()
         client?.close()
@@ -233,9 +226,9 @@ class EmmyLaunchDebugProcess(session: XDebugSession, val configuration: EmmyLaun
         if (cmd == MessageCMD.AttachedNotify) {
             val msg = Gson().fromJson(json, AttachedNotify::class.java)
             println(
-                    "Attached to lua state 0x${msg.state.toString(16)}",
-                    LogConsoleType.NORMAL,
-                    ConsoleViewContentType.SYSTEM_OUTPUT
+                "Attached to lua state 0x${msg.state.toString(16)}",
+                LogConsoleType.NORMAL,
+                ConsoleViewContentType.SYSTEM_OUTPUT
             )
         } else super.onReceiveMessage(cmd, json)
     }

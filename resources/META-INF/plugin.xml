@@ -8,7 +8,7 @@
     EmmyLua Attach Debugger Plugin for EmmyLua
     ]]></description>
 
-    <idea-version since-build="173.0"/>
+    <idea-version since-build="202.0"/>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.tang</depends>
@@ -16,6 +16,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <xdebugger.attachDebuggerProvider
                 implementation="com.tang.intellij.lua.debugger.emmyAttach.EmmyAttachDebuggerProvider"/>
+
         <programRunner implementation="com.tang.intellij.lua.debugger.emmyLaunch.EmmyLaunchRunner"/>
         <configurationType implementation="com.tang.intellij.lua.debugger.emmyLaunch.EmmyLaunchConfigurationType"/>
 

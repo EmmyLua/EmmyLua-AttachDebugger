@@ -10,7 +10,6 @@ import com.intellij.xdebugger.XDebugProcessStarter
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XDebuggerManager
 import com.tang.intellij.lua.debugger.LuaRunner
-import com.tang.intellij.lua.debugger.emmy.EmmyDebugProcess
 
 class EmmyLaunchRunner : LuaRunner() {
     companion object {
@@ -29,10 +28,11 @@ class EmmyLaunchRunner : LuaRunner() {
     }
 
     override fun doExecute(state: RunProfileState, environment: ExecutionEnvironment): RunContentDescriptor {
-        val manager = XDebuggerManager.getInstance(environment.project)
+        val project = environment.project
+        val manager = XDebuggerManager.getInstance(project)
         val session = manager.startSession(environment, object : XDebugProcessStarter() {
             override fun start(session: XDebugSession): XDebugProcess {
-                return EmmyLaunchDebugProcess(session, configuration!!)
+                return EmmyLaunchDebugProcess(session, configuration!!, project)
             }
         })
         return session.runContentDescriptor

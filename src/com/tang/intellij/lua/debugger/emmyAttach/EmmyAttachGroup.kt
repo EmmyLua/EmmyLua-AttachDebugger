@@ -14,25 +14,26 @@
  * limitations under the License.
  */
 
+
 package com.tang.intellij.lua.debugger.emmyAttach
 
 import com.intellij.execution.process.ProcessInfo
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.UserDataHolder
-import com.intellij.xdebugger.attach.XLocalAttachGroup
+import com.intellij.xdebugger.attach.XAttachProcessPresentationGroup
 import com.tang.intellij.lua.debugger.utils.getDisplayName
 import com.tang.intellij.lua.lang.LuaIcons
 import java.io.File
 import javax.swing.Icon
 import javax.swing.filechooser.FileSystemView
 
-class EmmyAttachGroup : XLocalAttachGroup {
+class EmmyAttachGroup : XAttachProcessPresentationGroup {
 
     companion object {
         val instance = EmmyAttachGroup()
     }
 
-    override fun getProcessDisplayText(project: Project, processInfo: ProcessInfo, userDataHolder: UserDataHolder): String {
+    override fun getItemDisplayText(project: Project, processInfo: ProcessInfo, userDataHolder: UserDataHolder): String {
         val map = userDataHolder.getUserData(EmmyAttachDebuggerProvider.DETAIL_KEY)
         if (map != null) {
             val detail = map[processInfo.pid]
@@ -42,7 +43,7 @@ class EmmyAttachGroup : XLocalAttachGroup {
         return processInfo.executableName
     }
 
-    override fun getProcessIcon(project: Project, processInfo: ProcessInfo, userDataHolder: UserDataHolder): Icon {
+    override fun getItemIcon(project: Project, processInfo: ProcessInfo, userDataHolder: UserDataHolder): Icon {
         val map = userDataHolder.getUserData(EmmyAttachDebuggerProvider.DETAIL_KEY)
         if (map != null) {
             val detail = map[processInfo.pid]
@@ -59,10 +60,17 @@ class EmmyAttachGroup : XLocalAttachGroup {
 
     override fun getGroupName() = "EmmyLua Attach Debugger"
 
-    override fun compare(project: Project, a: ProcessInfo, b: ProcessInfo, userDataHolder: UserDataHolder) =
+    override fun compare(a: ProcessInfo, b: ProcessInfo): Int =
             a.executableName.toLowerCase().compareTo(b.executableName.toLowerCase())
 
     override fun getOrder(): Int {
         return 0
+    }
+
+    override fun getProcessIcon(p0: Project, p1: ProcessInfo, p2: UserDataHolder): Icon {
+        return getItemIcon(p0,p1,p2);
+    }
+    override fun getProcessDisplayText(p0: Project, p1: ProcessInfo, p2: UserDataHolder): String {
+        return getItemDisplayText(p0,p1,p2);
     }
 }
