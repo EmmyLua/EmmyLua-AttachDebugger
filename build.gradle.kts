@@ -19,7 +19,7 @@ import de.undercouch.gradle.tasks.download.*
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.7.20"
-    id("org.jetbrains.intellij") version "1.9.0"
+    id("org.jetbrains.intellij") version "1.10.0"
     id("de.undercouch.download").version("5.3.0")
 }
 
@@ -61,6 +61,7 @@ task("unzipDebugger", type = Copy::class) {
 task("installDebugger", type = Copy::class) {
     dependsOn("unzipDebugger")
     from("temp/bin") {
+        include("emmy*")
         into("bin/")
     }
 
@@ -70,11 +71,11 @@ task("installDebugger", type = Copy::class) {
 tasks {
     // Set the JVM compatibility versions
     withType<JavaCompile> {
-        sourceCompatibility = "11"
-        targetCompatibility = "11"
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
     }
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "11"
+        kotlinOptions.jvmTarget = "17"
     }
 
     patchPluginXml {
@@ -100,7 +101,7 @@ tasks {
         doLast {
             copy {
                 from("src/main/debugger/bin")
-                into("$destinationDir/${pluginName.get()}/debugger/")
+                into("$destinationDir/${pluginName.get()}/debugger/bin")
             }
         }
     }
