@@ -61,7 +61,7 @@ class EmmyAttachGroup : XAttachProcessPresentationGroup {
     override fun getGroupName() = "EmmyLua Attach Debugger"
 
     override fun compare(a: ProcessInfo, b: ProcessInfo): Int =
-            a.executableName.toLowerCase().compareTo(b.executableName.toLowerCase())
+            a.executableName.lowercase().compareTo(b.executableName.lowercase())
 
     override fun getOrder(): Int {
         return 0

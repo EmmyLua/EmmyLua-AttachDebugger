@@ -50,10 +50,10 @@ task("downloadDebugger", type = Download::class) {
 task("unzipDebugger", type = Copy::class) {
     dependsOn("downloadDebugger")
     from(zipTree("temp/win32-x64.zip")) {
-        into("bin")
+        into("bin/win32-x64")
     }
     from(zipTree("temp/win32-x86.zip")) {
-        into("bin")
+        into("bin/win32-x86")
     }
     destinationDir = file("temp")
 }
@@ -61,8 +61,7 @@ task("unzipDebugger", type = Copy::class) {
 task("installDebugger", type = Copy::class) {
     dependsOn("unzipDebugger")
     from("temp/bin") {
-        include("emmy*")
-        into("bin/")
+        into("bin")
     }
 
     destinationDir = file("src/main/resources/debugger")
