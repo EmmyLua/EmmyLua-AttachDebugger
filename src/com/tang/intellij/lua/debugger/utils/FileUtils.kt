@@ -23,7 +23,7 @@ object FileUtils {
         }
 
     val archExeFile: String?
-        get() = getPluginVirtualFile("debugger/emmy/windows/x86/emmy_tool.exe")
+        get() = getPluginVirtualFile("debugger/bin/win32-x86/emmy_tool.exe")
 
     fun getPluginVirtualFile(path: String): String? {
         val directory = pluginVirtualDirectory

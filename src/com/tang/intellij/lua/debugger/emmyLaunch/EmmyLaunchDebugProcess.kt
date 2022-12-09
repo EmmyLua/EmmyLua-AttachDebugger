@@ -56,7 +56,7 @@ class EmmyLaunchDebugProcess(
     }
 
     private fun detectArch(): EmmyWinArch {
-        val tool = FileUtils.getPluginVirtualFile("debugger/emmy/windows/x64/emmy_tool.exe")
+        val tool = FileUtils.getPluginVirtualFile("debugger/bin/win32-x64/emmy_tool.exe")
         val commandLine = GeneralCommandLine(tool)
         commandLine.addParameters("arch_file", configuration.program)
         val process = commandLine.createProcess()
@@ -68,7 +68,7 @@ class EmmyLaunchDebugProcess(
     private fun runAndAttachUseWindowsTerminal() {
         val port = getPort(ThreadLocalRandom.current().nextInt(10240) + 10240);
         val arch = detectArch()
-        val path = FileUtils.getPluginVirtualFile("debugger/emmy/windows/${arch}")
+        val path = FileUtils.getPluginVirtualFile("debugger/bin/win32-${arch}")
         val re = Regex("[^/\\\\]+\$")
         val mc = re.find(configuration.program)
 
@@ -145,7 +145,7 @@ class EmmyLaunchDebugProcess(
     private fun runAndAttach() {
         val port = getPort(ThreadLocalRandom.current().nextInt(10240) + 10240);
         val arch = detectArch()
-        val path = FileUtils.getPluginVirtualFile("debugger/emmy/windows/${arch}")
+        val path = FileUtils.getPluginVirtualFile("debugger/bin/win32-${arch}")
 
         val commandLine = GeneralCommandLine()
         commandLine.exePath = "${path}/emmy_tool.exe"

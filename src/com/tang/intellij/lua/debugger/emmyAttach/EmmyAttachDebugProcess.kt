@@ -49,7 +49,7 @@ class EmmyAttachDebugProcess(
     }
 
     private fun detectArchByPid(pid: Int): EmmyWinArch {
-        val tool = FileUtils.getPluginVirtualFile("debugger/emmy/windows/x86/emmy_tool.exe")
+        val tool = FileUtils.getPluginVirtualFile("debugger/bin/win32-x86/emmy_tool.exe")
         val commandLine = GeneralCommandLine(tool)
         commandLine.addParameters("arch_pid", "$pid")
         val process = commandLine.createProcess()
@@ -60,7 +60,7 @@ class EmmyAttachDebugProcess(
 
     private fun attach(): Boolean {
         val arch = detectArchByPid(processInfo.pid)
-        val path = FileUtils.getPluginVirtualFile("debugger/emmy/windows/${arch}")
+        val path = FileUtils.getPluginVirtualFile("debugger/bin/win32-${arch}")
         val commandLine = GeneralCommandLine("${path}/emmy_tool.exe")
         commandLine.addParameters(
             "attach",
