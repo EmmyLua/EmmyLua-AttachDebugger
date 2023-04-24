@@ -134,7 +134,7 @@ class EmmyLaunchDebugProcess(
             val pid = pidString.toInt()
             attachTo(pid)
 
-            Thread.sleep(300)
+            Thread.sleep(500)
             val outputStream = it.getOutputStream()
             val bw = BufferedWriter(OutputStreamWriter(outputStream))
             bw.write("connected");

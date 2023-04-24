@@ -99,7 +99,7 @@ tasks {
     withType<org.jetbrains.intellij.tasks.PrepareSandboxTask> {
         doLast {
             copy {
-                from("src/main/debugger/bin")
+                from("src/main/resources/debugger/bin")
                 into("$destinationDir/${pluginName.get()}/debugger/bin")
             }
         }
