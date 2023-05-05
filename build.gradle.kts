@@ -35,7 +35,7 @@ intellij {
     plugins.set(listOf("com.tang:1.3.8-IDEA223"))
 }
 
-val emmyluaDebuggerVersion = "1.4.1"
+val emmyluaDebuggerVersion = "1.5.0"
 val emmyluaDebuggerProjectUrl = "https://github.com/EmmyLua/EmmyLuaDebugger"
 
 task("downloadDebugger", type = Download::class) {
