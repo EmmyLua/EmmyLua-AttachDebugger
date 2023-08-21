@@ -19,7 +19,7 @@ import de.undercouch.gradle.tasks.download.*
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.7.20"
-    id("org.jetbrains.intellij") version "1.10.0"
+    id("org.jetbrains.intellij") version "1.13.2"
     id("de.undercouch.download").version("5.3.0")
 }
 
@@ -29,13 +29,13 @@ repositories {
 
 intellij {
     pluginName.set("EmmyLua-AttachDebugger")
-    version.set("2022.3")
+    version.set("2023.1")
     type.set("IC") // Target IDE Platform
 
-    plugins.set(listOf("com.tang:1.3.8-IDEA223"))
+    plugins.set(listOf("com.tang:1.4.8-IDEA231"))
 }
 
-val emmyluaDebuggerVersion = "1.4.1"
+val emmyluaDebuggerVersion = "1.6.2"
 val emmyluaDebuggerProjectUrl = "https://github.com/EmmyLua/EmmyLuaDebugger"
 
 task("downloadDebugger", type = Download::class) {
@@ -79,7 +79,7 @@ tasks {
 
     patchPluginXml {
         sinceBuild.set("223")
-        untilBuild.set("231.*")
+        untilBuild.set("232.*")
     }
 
     signPlugin {

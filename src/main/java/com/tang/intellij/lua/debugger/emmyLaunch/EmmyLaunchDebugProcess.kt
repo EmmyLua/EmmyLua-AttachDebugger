@@ -2,14 +2,11 @@ package com.tang.intellij.lua.debugger.emmyLaunch
 
 import com.google.gson.Gson
 import com.intellij.execution.configurations.GeneralCommandLine
-import com.intellij.execution.filters.TextConsoleBuilderFactory
 import com.intellij.execution.process.*
 import com.intellij.execution.ui.ConsoleViewContentType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.xdebugger.XDebugSession
-import com.intellij.xdebugger.XSourcePosition
-import com.intellij.xdebugger.breakpoints.XLineBreakpoint
 import com.tang.intellij.lua.debugger.LogConsoleType
 import com.tang.intellij.lua.debugger.emmy.*
 import com.tang.intellij.lua.debugger.utils.FileUtils
@@ -18,23 +15,26 @@ import java.io.BufferedWriter
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.Socket
+import java.nio.charset.Charset
 import java.util.concurrent.ThreadLocalRandom
 
 
 class EmmyLaunchDebugProcess(
     session: XDebugSession,
-    val configuration: EmmyLaunchDebugConfiguration,
+    private val configuration: EmmyLaunchDebugConfiguration,
     val project: Project
 ) :
     EmmyDebugProcessBase(session) {
-
-    var client: Socket? = null
+    private var toolProcessHandler: ColoredProcessHandler? = null;
 
     override fun setupTransporter() {
-        if (configuration.useWindowsTerminal) {
-            runAndAttachUseWindowsTerminal()
-        } else {
-            runAndAttach()
+        LaunchDebug() { it ->
+            attachTo(it)
+            Thread.sleep(300)
+            toolProcessHandler?.let { tool ->
+                tool.processInput.write("connected\n".toByteArray())
+                tool.processInput.flush()
+            }
         }
     }
 
@@ -65,7 +65,7 @@ class EmmyLaunchDebugProcess(
         return if (exitValue == 0) EmmyWinArch.X64 else EmmyWinArch.X86
     }
 
-    private fun runAndAttachUseWindowsTerminal() {
+    private fun LaunchWithWindows() {
         val port = getPort(ThreadLocalRandom.current().nextInt(10240) + 10240);
         val arch = detectArch()
         val path = FileUtils.getPluginVirtualFile("debugger/bin/win32-${arch}")
@@ -114,6 +114,7 @@ class EmmyLaunchDebugProcess(
                         LogConsoleType.NORMAL,
                         ConsoleViewContentType.ERROR_OUTPUT
                     )
+
                     ProcessOutputTypes.STDOUT -> print(
                         processEvent.text,
                         LogConsoleType.NORMAL,
@@ -123,58 +124,43 @@ class EmmyLaunchDebugProcess(
             }
         })
         handler.startNotify()
-
-        client = Socket("localhost", port)
-        client?.let {
-            it.soTimeout = 10000
-            val inputStream = it.getInputStream()
-            val br = BufferedReader(InputStreamReader(inputStream))
-
-            val pidString = br.readLine()
-            val pid = pidString.toInt()
-            attachTo(pid)
-
-            Thread.sleep(500)
-            val outputStream = it.getOutputStream()
-            val bw = BufferedWriter(OutputStreamWriter(outputStream))
-            bw.write("connected");
-            bw.flush()
-        }
     }
 
-    private fun runAndAttach() {
-        val port = getPort(ThreadLocalRandom.current().nextInt(10240) + 10240);
+    private fun LaunchDebug(onConnected: (pid: Int) -> Unit) {
         val arch = detectArch()
         val path = FileUtils.getPluginVirtualFile("debugger/bin/win32-${arch}")
 
-        val commandLine = GeneralCommandLine()
-        commandLine.exePath = "${path}/emmy_tool.exe"
-        commandLine.setWorkDirectory(path)
-        commandLine.addParameters(
-            "run_and_attach",
-            "-dll",
-            "emmy_hook.dll",
-            "-dir",
-            "\"${path}\"",
-            "-work",
-            "\"${configuration.workingDirectory}\"",
-            "-exe",
-            "\"${configuration.program}\"",
-            "-unitbuf",
-            "-debug-port",
-            port.toString(),
-            "-listen-mode",
-            "-args",
-            "\"${configuration.parameter}\""
-        )
+        val commandLine = GeneralCommandLine().apply {
+            exePath = "${path}/emmy_tool.exe"
+            setWorkDirectory(path)
+            addParameter("launch")
+            if (configuration.useWindowsTerminal) {
+                addParameter("-create-new-window")
+            }
+            addParameters(
+                "-dll",
+                "emmy_hook.dll",
+                "-dir",
+                "\"${path}\"",
+                "-work",
+                "\"${configuration.workingDirectory}\"",
+                "-exe",
+                "\"${configuration.program}\"",
+                "-args",
+                "\"${configuration.parameter}\""
+            )
 
+            charset = Charset.forName("utf8")
+        }
 
-        val handler = ColoredProcessHandler(commandLine)
-        handler.addProcessListener(object : ProcessListener {
+        var forOut = false;
+        toolProcessHandler = ColoredProcessHandler(commandLine)
+        toolProcessHandler?.addProcessListener(object : ProcessListener {
             override fun startNotified(processEvent: ProcessEvent) {
             }
 
             override fun processTerminated(processEvent: ProcessEvent) {
+                toolProcessHandler = null
             }
 
             override fun processWillTerminate(processEvent: ProcessEvent, b: Boolean) {
@@ -187,39 +173,31 @@ class EmmyLaunchDebugProcess(
                         LogConsoleType.NORMAL,
                         ConsoleViewContentType.ERROR_OUTPUT
                     )
-                    ProcessOutputTypes.STDOUT -> print(
-                        processEvent.text,
-                        LogConsoleType.NORMAL,
-                        ConsoleViewContentType.SYSTEM_OUTPUT
-                    )
+
+                    ProcessOutputTypes.STDOUT -> {
+                        if (!forOut) {
+                            forOut = true
+                            val pid = processEvent.text.trim().toInt()
+                            onConnected(pid)
+                            return
+                        }
+                        print(
+                            processEvent.text,
+                            LogConsoleType.NORMAL,
+                            ConsoleViewContentType.SYSTEM_OUTPUT
+                        )
+                    }
                 }
             }
         })
 
-        handler.startNotify()
-
-        client = Socket("localhost", port)
-        client?.let {
-            it.soTimeout = 10000
-            val inputStream = it.getInputStream()
-            val br = BufferedReader(InputStreamReader(inputStream))
-
-            val pidString = br.readLine()
-            val pid = pidString.toInt()
-            attachTo(pid)
-
-            Thread.sleep(300)
-            val outputStream = it.getOutputStream()
-            val bw = BufferedWriter(OutputStreamWriter(outputStream))
-            bw.write("connected");
-            bw.flush()
-        }
-
+        toolProcessHandler?.startNotify()
     }
 
     override fun onDisconnect() {
         super.onDisconnect()
-        client?.close()
+        toolProcessHandler?.processInput?.write("close\n".toByteArray())
+        toolProcessHandler = null
     }
 
     override fun onReceiveMessage(cmd: MessageCMD, json: String) {

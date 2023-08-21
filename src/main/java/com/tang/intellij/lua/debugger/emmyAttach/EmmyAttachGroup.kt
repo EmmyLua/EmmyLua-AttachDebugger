@@ -33,7 +33,11 @@ class EmmyAttachGroup : XAttachProcessPresentationGroup {
         val instance = EmmyAttachGroup()
     }
 
-    override fun getItemDisplayText(project: Project, processInfo: ProcessInfo, userDataHolder: UserDataHolder): String {
+    override fun getItemDisplayText(
+        project: Project,
+        processInfo: ProcessInfo,
+        userDataHolder: UserDataHolder
+    ): String {
         val map = userDataHolder.getUserData(EmmyAttachDebuggerProvider.DETAIL_KEY)
         if (map != null) {
             val detail = map[processInfo.pid]
@@ -61,16 +65,9 @@ class EmmyAttachGroup : XAttachProcessPresentationGroup {
     override fun getGroupName() = "EmmyLua Attach Debugger"
 
     override fun compare(a: ProcessInfo, b: ProcessInfo): Int =
-            a.executableName.lowercase().compareTo(b.executableName.lowercase())
+        a.executableName.lowercase().compareTo(b.executableName.lowercase())
 
     override fun getOrder(): Int {
         return 0
-    }
-
-    override fun getProcessIcon(p0: Project, p1: ProcessInfo, p2: UserDataHolder): Icon {
-        return getItemIcon(p0,p1,p2);
-    }
-    override fun getProcessDisplayText(p0: Project, p1: ProcessInfo, p2: UserDataHolder): String {
-        return getItemDisplayText(p0,p1,p2);
     }
 }
