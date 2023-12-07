@@ -32,7 +32,7 @@ intellij {
     version.set("2023.1")
     type.set("IC") // Target IDE Platform
 
-    plugins.set(listOf("com.tang:1.4.9-IDEA231"))
+    plugins.set(listOf("com.tang:1.4.8-IDEA231"))
 }
 
 val emmyluaDebuggerVersion = "1.7.1"
