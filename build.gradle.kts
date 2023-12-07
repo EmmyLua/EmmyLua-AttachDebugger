@@ -32,10 +32,10 @@ intellij {
     version.set("2023.1")
     type.set("IC") // Target IDE Platform
 
-    plugins.set(listOf("com.tang:1.4.8-IDEA231"))
+    plugins.set(listOf("com.tang:1.4.9-IDEA231"))
 }
 
-val emmyluaDebuggerVersion = "1.6.2"
+val emmyluaDebuggerVersion = "1.7.1"
 val emmyluaDebuggerProjectUrl = "https://github.com/EmmyLua/EmmyLuaDebugger"
 
 task("downloadDebugger", type = Download::class) {
@@ -79,7 +79,7 @@ tasks {
 
     patchPluginXml {
         sinceBuild.set("223")
-        untilBuild.set("232.*")
+        untilBuild.set("233.*")
     }
 
     signPlugin {
