@@ -26,7 +26,10 @@ import com.tang.intellij.lua.debugger.LogConsoleType
 import com.tang.intellij.lua.debugger.emmy.*
 import com.tang.intellij.lua.debugger.utils.FileUtils
 
-class EmmyAttachDebugProcess(session: XDebugSession, private val processInfo: ProcessInfo) : EmmyDebugProcessBase(session) {
+class EmmyAttachDebugProcess(
+    session: XDebugSession,
+    private val processInfo: ProcessInfo
+) : EmmyDebugProcessBase(session) {
     override fun setupTransporter() {
         val suc = attach()
         if (!suc) {
@@ -45,8 +48,8 @@ class EmmyAttachDebugProcess(session: XDebugSession, private val processInfo: Pr
         transporter.start()
     }
 
-    private fun detectArch(pid: Int): EmmyWinArch {
-        val tool = FileUtils.getPluginVirtualFile("debugger/emmy/windows/x86/emmy_tool.exe")
+    private fun detectArchByPid(pid: Int): EmmyWinArch {
+        val tool = FileUtils.getPluginVirtualFile("debugger/bin/win32-x86/emmy_tool.exe")
         val commandLine = GeneralCommandLine(tool)
         commandLine.addParameters("arch_pid", "$pid")
         val process = commandLine.createProcess()
@@ -56,17 +59,17 @@ class EmmyAttachDebugProcess(session: XDebugSession, private val processInfo: Pr
     }
 
     private fun attach(): Boolean {
-        val arch = detectArch(processInfo.pid)
-        val path = FileUtils.getPluginVirtualFile("debugger/emmy/windows/${arch}")
+        val arch = detectArchByPid(processInfo.pid)
+        val path = FileUtils.getPluginVirtualFile("debugger/bin/win32-${arch}")
         val commandLine = GeneralCommandLine("${path}/emmy_tool.exe")
         commandLine.addParameters(
-                "attach",
-                "-p",
-                "${processInfo.pid}",
-                "-dir",
-                path,
-                "-dll",
-                "emmy_hook.dll"
+            "attach",
+            "-p",
+            "${processInfo.pid}",
+            "-dir",
+            path,
+            "-dll",
+            "emmy_hook.dll"
         )
         val handler = OSProcessHandler(commandLine)
         handler.addProcessListener(object : ProcessListener {
@@ -81,8 +84,16 @@ class EmmyAttachDebugProcess(session: XDebugSession, private val processInfo: Pr
 
             override fun onTextAvailable(processEvent: ProcessEvent, key: Key<*>) {
                 when (key) {
-                    ProcessOutputTypes.STDERR -> print(processEvent.text, LogConsoleType.NORMAL, ConsoleViewContentType.ERROR_OUTPUT)
-                    ProcessOutputTypes.STDOUT -> print(processEvent.text, LogConsoleType.NORMAL, ConsoleViewContentType.SYSTEM_OUTPUT)
+                    ProcessOutputTypes.STDERR -> print(
+                        processEvent.text,
+                        LogConsoleType.NORMAL,
+                        ConsoleViewContentType.ERROR_OUTPUT
+                    )
+                    ProcessOutputTypes.STDOUT -> print(
+                        processEvent.text,
+                        LogConsoleType.NORMAL,
+                        ConsoleViewContentType.SYSTEM_OUTPUT
+                    )
                 }
             }
         })
@@ -94,8 +105,11 @@ class EmmyAttachDebugProcess(session: XDebugSession, private val processInfo: Pr
     override fun onReceiveMessage(cmd: MessageCMD, json: String) {
         if (cmd == MessageCMD.AttachedNotify) {
             val msg = Gson().fromJson(json, AttachedNotify::class.java)
-            println("Attached to lua state 0x${msg.state.toString(16)}", LogConsoleType.NORMAL, ConsoleViewContentType.SYSTEM_OUTPUT)
-        }
-        else super.onReceiveMessage(cmd, json)
+            println(
+                "Attached to lua state 0x${msg.state.toString(16)}",
+                LogConsoleType.NORMAL,
+                ConsoleViewContentType.SYSTEM_OUTPUT
+            )
+        } else super.onReceiveMessage(cmd, json)
     }
 }
