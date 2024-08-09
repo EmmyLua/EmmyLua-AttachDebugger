@@ -19,11 +19,12 @@ package com.tang.intellij.lua.debugger.utils
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.ProcessInfo
 import com.intellij.execution.util.ExecUtil
+import java.nio.charset.Charset
 
 data class ProcessDetailInfo(
-        var pid: Int = 0,
-        var path: String = "",
-        var title: String = ""
+    var pid: Int = 0,
+    var path: String = "",
+    var title: String = "",
 )
 
 private const val MAX_DISPLAY_LEN = 60
@@ -58,4 +59,26 @@ fun listProcesses(): Map<Int, ProcessDetailInfo> {
         processMap[pid] = p
     }
     return processMap
+}
+
+fun listProcessesByEncoding(encoding: String): List<ProcessDetailInfo> {
+    val processes = mutableListOf<ProcessDetailInfo>()
+    val archExe = FileUtils.archExeFile ?: return processes
+    val commandLine = GeneralCommandLine(archExe)
+    commandLine.charset = Charset.forName(encoding)
+    commandLine.addParameters("list_processes")
+
+    val processOutput = ExecUtil.execAndGetOutput(commandLine)
+
+    val text = processOutput.stdout
+    val lines= text.split("\n")
+    val size = lines.size / 4
+    for (i in 0 until size) {
+        val pid = lines[i * 4 + 0].toInt()
+        val title = lines[i * 4 + 1]
+        val path = lines[i * 4 + 2]
+        val p = ProcessDetailInfo(pid, path, title)
+        processes.add(p)
+    }
+    return processes
 }

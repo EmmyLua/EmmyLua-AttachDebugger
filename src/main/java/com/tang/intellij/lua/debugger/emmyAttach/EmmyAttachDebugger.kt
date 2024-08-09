@@ -27,15 +27,16 @@ import com.tang.intellij.lua.debugger.utils.ProcessDetailInfo
 import com.tang.intellij.lua.debugger.utils.getDisplayName
 
 class EmmyAttachDebugger(
-        private val processInfo: ProcessInfo,
-        private val detailInfo: ProcessDetailInfo
+    private val processInfo: ProcessInfo,
+    private val detailInfo: ProcessDetailInfo
 ) : XLocalAttachDebugger {
     override fun attachDebugSession(project: Project, processInfo: ProcessInfo) {
         val displayName = "PID:${processInfo.pid}($debuggerDisplayName)"
-        XDebuggerManager.getInstance(project).startSessionAndShowTab(displayName, null, object : XDebugProcessStarter() {
-            override fun start(xDebugSession: XDebugSession): XDebugProcess =
+        XDebuggerManager.getInstance(project)
+            .startSessionAndShowTab(displayName, null, object : XDebugProcessStarter() {
+                override fun start(xDebugSession: XDebugSession): XDebugProcess =
                     EmmyAttachDebugProcess(xDebugSession, processInfo)
-        })
+            })
     }
 
     override fun getDebuggerDisplayName(): String {
